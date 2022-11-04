@@ -1,0 +1,10 @@
+- commencer par implementer tests. TDD
+- gerer arithmetique et cas simples
+- choix: pattern matching au debut, mais transformation des sexp en liste
+  Haskell s'est presentee comme une option interessante pour generaliser,
+  puisqu'on ne sait pas quelle genre d'exp il s'agit avant d'avoir atteint le
+  centre du Sexp.
+  Ceci est plutot naturel et respecte l'aspect de la famille LISP que le code
+  est toujours sous une forme de liste de toute facon.
+  Lors de la premiere implementation, division des liste en 3 cas: liste de 1,2
+  ou 3 elements.

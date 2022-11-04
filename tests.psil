@@ -1,0 +1,140 @@
+(+ (- (* 2 3) 5) (/ (- 10 30) (+ 2 (-6))))
+   ; ↝ 6 : Lint
+
+(list (List (List Int))
+      (list (List Int) (list Int 1 2) (list Int 3 4))
+      (list (List Int) (list Int 5 6) (list Int 7 8)))
+   ; ↝ [[[1 2] [3 4]] [[5 6] [7 8]]] : Llist (Llist (Llist Lint))
+
+(: (list (Int -> (Int -> Int)) - * +) (List (Int Int -> Int)))
+   ; ↝ [<function> <function> <function>] : Llist (Lfun Lint (Lfun Lint Lint))
+
+(list (Int Int -> Int) - * +)
+   ; ↝ [<function> <function> <function>] : Llist (Lfun Lint (Lfun Lint Lint))
+
+(let ((x (+ 3)))
+     (let ((y (- 3)))
+          (list (Int -> Int) x y)))
+   ; ↝ [<function> <function> ] : Llist (Lfun Lint Lint)
+
+(let ((x (list Int 2 3))
+      (y (list Int 4 5)))
+     (list (List Int) x y))
+   ; ↝ [[2 3] [4 5]] : Llist (Llist Lint)
+
+(let ((x (list (List (Int Int -> Int)) (list (Int Int -> Int) + -)
+                                       (list (Int Int -> Int) * /))))
+     (let ((y (list (List (Int Int -> Int)) (list (Int Int -> Int) + *)
+                                            (list (Int Int -> Int) - /))))
+          (list (List (List (Int Int -> Int))) x y)))
+  ; ↝ [[[<function> <function>] [<function> <function>]] [[<function> <function>] [<function> <function>]]] : Llist (Llist (Llist (Lfun Lint (Lfun Lint Lint))))
+
+(case (list Int 4 5)
+      ((cons x y) (y))
+      (nil (list Int 2 3)))
+  ; ↝ [5] : Llist Lint
+
+(let ((x (list Int 2 3))
+      (y (list Int 4 5)))
+    (case (x)
+          (nil (case (y)
+                     (nil (0))
+                     ((cons ey eys) (ey))))
+          ((cons ex exs) (case (y)
+                               (nil (ex))
+                               ((cons ey eys) (+ ex ey))))))
+  ; ↝ 6 : Lint
+
+(let ((x (list Int 2 3))
+      (y (list Int 4 5)))
+    (case (x)
+          (nil (case (y)
+                     (nil (0))
+                     ((cons ey eys) (let ((x ey))
+                                         (x)))))
+          ((cons ex exs) (case (y)
+                               (nil (let ((x ex))
+                                         (x)))
+                               ((cons ey eys) (let ((x ex)
+                                                    (y ey))
+                                                   (+ x y)))))))
+  ; ↝ 6 : Lint
+
+(letfn inc ((x Int)) Int (+ x 1) (inc 4))
+  ; ↝ 5 : Lint
+
+(letfn dec ((y Int)) Int (- y 1) (dec 3))
+  ; ↝ 2 : Lint
+
+(letfn sum ((xs (List Int))) Int
+    (case xs
+      (nil 0)
+      ((cons x xs) (+ x (sum xs))))
+  (list Int (sum (list Int 5 6))))
+  ; ↝ [11] : Llist Int
+
+(letfn sum () Int
+  (5)
+  (sum))
+  ; ↝ 5 : Int
+
+(letfn map ((f (Int -> Int))
+            (l (List Int)))
+           (List Int)
+  (case l
+    (nil (nil Int))
+    ((cons x xs) (cons (f x) (map f xs))))
+  (map (+ 1) (list Int 1 2 3)))
+  ; ↝ [2 3 4] : Llist Lint
+
+(letfn foldl ((f (Int Int -> Int))
+              (i Int)
+              (l (List Int)))
+             (Int)
+  (case l
+    (nil i)
+    ((cons x xs) (foldl f (f i x) xs)))
+  (foldl - 0 (list Int 1 2 3)))
+  ; ↝ -6 : Lint
+
+(letfn foldr ((f (Int Int -> Int))
+              (i Int)
+              (l (List Int)))
+             (Int)
+  (case l
+    (nil i)
+    ((cons x xs) (f x (foldr f i xs))))
+  (foldr - 0 (list Int 1 2 3)))
+  ; ↝ 2 : Lint
+
+(letfn returnX ((x (List Int)) (x Int)) Int
+  (x)
+  (returnX (list Int 2 4) 3))
+  ; 3 : Lint
+
+
+(letfn next3num ((n Int))
+                (List Int)
+  (let ((inc (letfn inc ((y Int)) Int (+ y 1) (inc))))
+   (list Int (inc n) (inc (inc n)) (inc (inc (inc n)))))
+  (next3num 5))
+  ; ↝ [6 7 8] : List Lint
+
+(letfn next3num ((l (List Int)))
+                (List Int)
+  (let ((inc (letfn inc ((y Int)) Int (+ y 1) (inc))))
+   (case l
+     (nil (list Int 1 2 3))
+     ((cons x xs) (list Int (inc x) (inc (inc x)) (inc (inc (inc x)))))))
+  (next3num (list Int 5)))
+  ; ↝ [6 7 8] : List Lint
+
+(let ((x (let ((x (list Int 1 2 3))) x)))
+ (cons 0 x))
+  ; ↝ [0 1 2 3] : List Lint
+
+(let ((f (letfn g ((arg Int)) Int
+          (let ((x 98)) (+ arg (+ arg x)))
+           (g))))
+     (let ((x -25)) (f 1)))
+  ; ↝ 100 : Lint (et confirme portée statique)
